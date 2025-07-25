@@ -7,55 +7,69 @@ const { JWT_ADMIN_SECRET } = require("../config");
 const { adminMiddleware } = require("../middlewares/adminMiddleware");
 
 adminRouter.post("/signup", async function (req, res) {
-  const { email, password, firstName, lastName } = req.body;
+  try {
+    const { email, password, firstName, lastName } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  await adminModel.create({
-    email,
-    hashedPassword,
-    firstName,
-    lastName,
-  });
-  res.status(201).send({
-    message: "Admin created successfully",
-    admin: {
-      _id: adminModel._id,
-      email: email,
-      password: hashedPassword,
-      firstName: firstName,
-      lastName: lastName,
-    },
-  });
+    const admin = await adminModel.create({
+      email,
+      hashedPassword,
+      firstName,
+      lastName,
+    });
+    res.status(201).send({
+      message: "Admin created successfully",
+      admin: {
+        _id: admin._id,
+        email: email,
+        password: hashedPassword,
+        firstName: firstName,
+        lastName: lastName,
+      },
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
 });
 
 adminRouter.post("/signin", async function (req, res) {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const admin = await adminModel.findOne({
-    email: email,
-  });
-  const passwordMatch = bcrypt.compare(password, admin.password);
-  if (admin && passwordMatch) {
-    const token = jwt.sign(
-      {
-        id: admin._id.toString(),
-      },
-      JWT_ADMIN_SECRET
-    );
-    res.status(200).send({
-      message: "Admin signed in successfully",
-      token: token,
-      admin: {
-        _id: admin._id,
-        email: admin.email,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-      },
+    const admin = await adminModel.findOne({
+      email: email,
     });
-  } else {
-    res.status(403).send({
-      message: "Invalid email or password",
+    const passwordMatch = await bcrypt.compare(password, admin.password);
+    if (admin && passwordMatch) {
+      const token = jwt.sign(
+        {
+          id: admin._id.toString(),
+        },
+        JWT_ADMIN_SECRET
+      );
+      res.status(200).send({
+        message: "Admin signed in successfully",
+        token: token,
+        admin: {
+          _id: admin._id,
+          email: admin.email,
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+        },
+      });
+    } else {
+      res.status(403).send({
+        message: "Invalid email or password",
+      });
+    }
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error",
+      error: error.message,
     });
   }
 });
@@ -64,7 +78,7 @@ adminRouter.post("/course", adminMiddleware, async function (req, res) {
   try {
     const { title, description, price, imageUrl } = req.body;
     const creatorId = req.adminId;
-    await courseModel.create({
+    const course = await courseModel.create({
       title,
       description,
       price,
@@ -74,7 +88,7 @@ adminRouter.post("/course", adminMiddleware, async function (req, res) {
     res.status(201).send({
       message: "Course created successfully",
       course: {
-        id: courseModel._id,
+        id: course._id,
         title: title,
         description: description,
         price: price,

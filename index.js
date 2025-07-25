@@ -12,6 +12,15 @@ app.use("/admin", adminRouter);
 app.use("/course", courseRouter);
 
 (async function main() {
-  await mongoose.connect(process.env.MONGODB_URL);
-  app.listen(process.env.PORT || 3000);
+  try {
+    await mongoose.connect(process.env.MONGODB_URL);
+    console.log("Connected to MongoDB");
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("Error starting the app:", err.message);
+  }
 })();

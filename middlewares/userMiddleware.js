@@ -1,15 +1,15 @@
 const jwt = require("jsonwebtoken");
-const { JWT_ADMIN_SECRET } = require("../config");
+const { JWT_USER_SECRET } = require("../config");
 
-const adminMiddleware = (req, res, next) => {
+const userMiddleware = (req, res, next) => {
   try {
     const token = req.headers.token;
     if (!token) {
       return res.status(401).send({ message: "Unauthorized access" });
     } else {
-      const decodedToken = jwt.verify(token, JWT_ADMIN_SECRET);
+      const decodedToken = jwt.verify(token, JWT_USER_SECRET);
       if (decodedToken) {
-        req.adminId = decodedToken.id;
+        req.userId = decodedToken.id;
         next();
       } else {
         res.status(401).send({ message: "Invalid token" });
@@ -24,5 +24,5 @@ const adminMiddleware = (req, res, next) => {
 };
 
 module.exports = {
-  adminMiddleware: adminMiddleware,
+  userMiddleware: userMiddleware,
 };
